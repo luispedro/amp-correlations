@@ -27,9 +27,7 @@ def filter_columns():
     data = data.T[data.any()].T
 
     motus = pd.read_table('data/freeze.v2.motusv2_5.mg3.insertcount.tsv.gz', index_col=0)
-    motus.shape
 
-    motus.shape
     samples = set(data.columns) &  set(motus.index)
 
     data = data[samples]
