@@ -24,6 +24,8 @@ def summarize_correlations(p):
     import pandas as pd
 
     origins = pd.read_table('preproc/AMP_origin.tsv.gz', index_col=0)
+    taxo = pd.read_table('./data/db_mOTU_taxonomy_ref-mOTUs.tsv', index_col=0)
+    taxo.rename(index=lambda ix: int(ix.split('_')[-1], 10), inplace=True)
     origin_id = origins.squeeze().map(lambda c : int(c[len('specI_v3_Cluster'):], 10))
 
     predictions = {}
@@ -36,7 +38,12 @@ def summarize_correlations(p):
 
     predictions = pd.DataFrame(predictions).T
     predictions['origin_id'] = origin_id.reindex(predictions.index)
+    predictions['prediction_genus'] = taxo['genus'].reindex(predictions['prediction_id']).values
+    predictions['origin_genus'] = taxo['genus'].reindex(predictions['origin_id']).values
+
     predictions['correct' ] = predictions.eval('prediction_id == origin_id')
+    predictions['correct_genus' ] = predictions.eval('prediction_genus == origin_genus')
+
     return predictions
 
 
