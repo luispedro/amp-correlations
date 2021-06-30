@@ -44,3 +44,26 @@ def filter_columns():
     return amp_name, motus_name
 
 
+
+def filter_human_gut(amp_name, motus_name, min_number_samples=30):
+    import pandas as pd
+    meta = pd.read_table('data/metadata.tsv', index_col=0)
+
+    motus = pd.read_table(motus_name, index_col=0)
+    meta = meta.reindex(motus.index).query('host_tax_id == 9606')
+    meta = meta.loc[meta.microontology.map(lambda c: 'host-associated:animal host:digestive tract:in' in c)]
+    motus = motus.loc[meta.index]
+
+    motus = motus.T.loc[((motus > 0).sum() >= min_number_samples)].T
+
+    amps = pd.read_table(amp_name, index_col=0)
+    amps = amps[motus.index]
+    amps = amps.loc[(amps > 0).sum(1) >= min_number_samples]
+
+    omotus = 'preproc/filter_human_gut_motus.tsv.gz'
+    oamps = 'preproc/filter_human_gut_amsp.tsv.gz'
+
+    amps.to_csv(oamps, sep='\t')
+    motus.to_csv(omotus, sep='\t')
+    return oamps, omotus
+

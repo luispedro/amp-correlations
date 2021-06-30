@@ -1,7 +1,8 @@
 from jug import TaskGenerator, iteratetask
-from preproc import filter_columns
+from preproc import filter_columns, filter_human_gut
 
 filter_columns = TaskGenerator(filter_columns)
+filter_human_gut = TaskGenerator(filter_human_gut)
 
 @TaskGenerator
 def run_corrs(amp_name, motus_name, mode):
@@ -47,10 +48,18 @@ def summarize_correlations(p):
     return predictions
 
 
+@TaskGenerator
+def save_to_tsv(df, oname):
+    df.to_csv(oname, sep='\t')
+    return oname
 
 amp_name, motus_name = iteratetask(filter_columns(), 2)
-p = run_corrs(amp_name, motus_name, 'spearmanr')
-s0 = summarize_correlations(p)
+hg_amp_name, hg_motus_name = iteratetask(filter_human_gut(amp_name, motus_name), 2)
 
-p = run_corrs(amp_name, motus_name, 'pearsonr')
+p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr')
+s0 = summarize_correlations(p)
+save_to_tsv(s0, 'outputs/spearmanr-hg-results.tsv.xz')
+
+p = run_corrs(hg_amp_name, hg_motus_name, 'pearsonr')
 s1 = summarize_correlations(p)
+save_to_tsv(s1, 'outputs/pearsonr-hg-results.tsv.xz')
