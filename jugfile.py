@@ -15,9 +15,9 @@ def run_corrs(amp_name, motus_name, mode):
     mv = motus.T.values.copy()
 
     if mode == 'pearsonr':
-        return pd.DataFrame(corr.pearsonr_pcorr(data.values, motus.values.T), index=data.index, columns=motus.columns)
+        return pd.DataFrame(corr.pearsonr_pcorr(data.values, mv), index=data.index, columns=motus.columns)
     elif mode == 'spearmanr':
-        return pd.DataFrame(corr.spearman_pcorr(data.values, motus.values.T), index=data.index, columns=motus.columns)
+        return pd.DataFrame(corr.spearman_pcorr(data.values, mv), index=data.index, columns=motus.columns)
     else:
         raise ValueError("?")
 @TaskGenerator
