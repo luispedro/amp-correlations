@@ -1,6 +1,9 @@
 
 def filter_columns():
+    from os import makedirs
     import pandas as pd
+    makedirs('preproc', exist_ok=True)
+
     ampsphere = pd.read_table('./data/AMPSphere_v.2021-03.species.tsv.gz', index_col=0)
     matched = {}
     unmatched = {}
@@ -60,8 +63,8 @@ def filter_human_gut(amp_name, motus_name, min_number_samples=30):
     amps = amps[motus.index]
     amps = amps.loc[(amps > 0).sum(1) >= min_number_samples]
 
-    omotus = 'preproc/filter_human_gut_motus.tsv.gz'
-    oamps = 'preproc/filter_human_gut_amsp.tsv.gz'
+    omotus = f'preproc/filter_human_gut_motus_min={min_number_samples}.tsv.gz'
+    oamps = f'preproc/filter_human_gut_amsp_min={min_number_samples}.tsv.gz'
 
     amps.to_csv(oamps, sep='\t')
     motus.to_csv(omotus, sep='\t')
