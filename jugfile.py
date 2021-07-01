@@ -47,6 +47,14 @@ def summarize_correlations(p):
 
     return predictions
 
+@TaskGenerator
+def results_q(s):
+    return {
+            'nr': len(s),
+            'correct': s['correct'].mean(),
+            'correct_genus': s['correct_genus'].mean(),
+            }
+
 
 @TaskGenerator
 def save_to_tsv(df, oname):
@@ -54,12 +62,17 @@ def save_to_tsv(df, oname):
     return oname
 
 amp_name, motus_name = iteratetask(filter_columns(), 2)
-hg_amp_name, hg_motus_name = iteratetask(filter_human_gut(amp_name, motus_name), 2)
 
-p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr')
-s0 = summarize_correlations(p)
-save_to_tsv(s0, 'outputs/spearmanr-hg-results.tsv.xz')
+final = {}
+for min_samples in [20, 30, 45, 60, 100, 120, 150, 200, 250, 500]:
+    hg_amp_name, hg_motus_name = iteratetask(filter_human_gut(amp_name, motus_name, min_number_samples=min_samples), 2)
 
-p = run_corrs(hg_amp_name, hg_motus_name, 'pearsonr')
-s1 = summarize_correlations(p)
-save_to_tsv(s1, 'outputs/pearsonr-hg-results.tsv.xz')
+    p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr')
+    s0 = summarize_correlations(p)
+    save_to_tsv(s0, f'outputs/spearmanr-hg-results_min={min_samples}.tsv.xz')
+    final[min_samples, 'spearmanr'] = results_q(s0)
+
+    p = run_corrs(hg_amp_name, hg_motus_name, 'pearsonr')
+    s1 = summarize_correlations(p)
+    save_to_tsv(s1, f'outputs/pearsonr-hg-results_min={min_samples}.tsv.xz')
+    final[min_samples, 'pearsonr'] = results_q(s1)
