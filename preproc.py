@@ -64,7 +64,7 @@ def filter_human_gut(amp_name, motus_name, min_number_samples=30):
     amps = amps.loc[(amps > 0).sum(1) >= min_number_samples]
 
     omotus = f'preproc/filter_human_gut_motus_min={min_number_samples}.tsv.gz'
-    oamps = f'preproc/filter_human_gut_amsp_min={min_number_samples}.tsv.gz'
+    oamps = f'preproc/filter_human_gut_amps_min={min_number_samples}.tsv.gz'
 
     amps.to_csv(oamps, sep='\t')
     motus.to_csv(omotus, sep='\t')
