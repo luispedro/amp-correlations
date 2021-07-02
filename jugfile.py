@@ -12,6 +12,9 @@ def run_corrs(amp_name, motus_name, mode):
     data = pd.read_table(amp_name, index_col=0)
     motus = pd.read_table(motus_name, index_col=0)
 
+    assert motus.shape[0] == data.shape[1]
+    assert (motus.index == data.columns).all()
+
     mv = motus.T.values.copy()
 
     if mode == 'pearsonr':
@@ -20,6 +23,24 @@ def run_corrs(amp_name, motus_name, mode):
         return pd.DataFrame(corr.spearman_pcorr(data.values, mv), index=data.index, columns=motus.columns)
     else:
         raise ValueError("?")
+
+@TaskGenerator
+def compute_jaccard(amp_name, motus_name):
+    import pandas as pd
+    import numpy as np
+    motus = pd.read_table(motus_name, index_col=0)
+    amps = pd.read_table(amp_name, index_col=0)
+    common = np.dot((amps>0).astype(float), (motus>0).astype(float))
+    common = pd.DataFrame(common, index=amps.index, columns=motus.columns)
+
+    bamps = (amps>0)
+    bmotus = (motus>0)
+
+    union = pd.DataFrame({k:(bmotus.values.T |bamps.loc[k].values).sum(1) for k in bamps.index}, index=motus.columns)
+    jacc = common.T/union
+    return jacc.T.copy()
+
+
 @TaskGenerator
 def summarize_correlations(p):
     import pandas as pd
@@ -64,7 +85,7 @@ def save_to_tsv(df, oname):
 amp_name, motus_name = iteratetask(filter_columns(), 2)
 
 final = {}
-for min_samples in [20, 30, 45, 60, 100, 120, 150, 200, 250, 500]:
+for min_samples in [10, 20, 30, 45, 60, 100, 120, 150, 200, 250, 500]:
     hg_amp_name, hg_motus_name = iteratetask(filter_human_gut(amp_name, motus_name, min_number_samples=min_samples), 2)
 
     p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr')
@@ -76,3 +97,6 @@ for min_samples in [20, 30, 45, 60, 100, 120, 150, 200, 250, 500]:
     s1 = summarize_correlations(p)
     save_to_tsv(s1, f'outputs/pearsonr-hg-results_min={min_samples}.tsv.xz')
     final[min_samples, 'pearsonr'] = results_q(s1)
+
+    p = compute_jaccard(hg_amp_name, hg_motus_name)
+    final[min_samples, 'jaccard'] = results_q(summarize_correlations(p))
