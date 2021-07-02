@@ -24,12 +24,13 @@ def filter_columns():
     for ch in  pd.read_table('data/abundances/amp_abundances_matrix.tsv.gz', index_col=0, chunksize=200):
         ch = ch.loc[ch.index.map(interesting.__contains__)]
         ch.fillna(0., inplace=True)
-        print(len(ch))
         data.append(ch)
     data = pd.concat(data)
     data = data.T[data.any()].T
 
     motus = pd.read_table('data/freeze.v2.motusv2_5.mg3.insertcount.tsv.gz', index_col=0)
+    motus = motus[motus.any(1)]
+    motus = (motus.T/motus.sum(1)).T
 
     samples = set(data.columns) &  set(motus.index)
 
