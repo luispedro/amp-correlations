@@ -85,17 +85,20 @@ def save_to_tsv(df, oname):
 amp_name, motus_name = iteratetask(filter_columns(), 2)
 
 final = {}
+tables = {}
 for min_samples in [10, 20, 30, 45, 60, 100, 120, 150, 200, 250, 500]:
     hg_amp_name, hg_motus_name = iteratetask(filter_human_gut(amp_name, motus_name, min_number_samples=min_samples), 2)
 
     p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr')
     s0 = summarize_correlations(p)
     save_to_tsv(s0, f'outputs/spearmanr-hg-results_min={min_samples}.tsv.xz')
+    tables[min_samples, 'spearmanr'] = s0
     final[min_samples, 'spearmanr'] = results_q(s0)
 
     p = run_corrs(hg_amp_name, hg_motus_name, 'pearsonr')
     s1 = summarize_correlations(p)
     save_to_tsv(s1, f'outputs/pearsonr-hg-results_min={min_samples}.tsv.xz')
+    tables[min_samples, 'pearsonr'] = s1
     final[min_samples, 'pearsonr'] = results_q(s1)
 
     p = compute_jaccard(hg_amp_name, hg_motus_name)
