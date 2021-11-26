@@ -4,18 +4,12 @@ def filter_columns():
     import pandas as pd
     makedirs('preproc', exist_ok=True)
 
-    ampsphere = pd.read_table('./data/AMPSphere_v.2021-03.species.tsv.gz', index_col=0)
-    matched = {}
-    unmatched = {}
-    for k,vs in ampsphere.groupby('AMP accession').groups.items():
-        vs = ampsphere.loc[vs]
-        cs = vs['specI cluster'].value_counts()
-        if len(cs) == 1:
-            [sp] = cs.index
-            matched[k] = sp
-        else:
-            unmatched[k] = cs
-    origin = pd.Series(matched)
+    def ex(d):
+        if ',' in d: return None
+        if d.startswith('specI_v3_'): return int(d[len('specI_v3_'):], 10)
+        return int(d[len('ref_mOTU_v25_'):], 10)
+    dedup = pd.read_table('./data/amp_taxa_association.dedup.tsv.xz', index_col=0, comment='#').squeeze()
+    origin = dedup.map(ex).dropna().map(lambda x: f'specI_v3_Cluster{int(x)}')
     pd.DataFrame({'origin': origin}).to_csv('preproc/AMP_origin.tsv.gz', index_label='AMP', sep='\t')
 
     interesting = set(origin.index)
