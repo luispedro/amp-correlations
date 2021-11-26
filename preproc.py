@@ -8,9 +8,18 @@ def filter_columns():
         if ',' in d: return None
         if d.startswith('specI_v3_'): return int(d[len('specI_v3_'):], 10)
         return int(d[len('ref_mOTU_v25_'):], 10)
-    dedup = pd.read_table('./data/amp_taxa_association.dedup.tsv.xz', index_col=0, comment='#').squeeze()
-    origin = dedup.map(ex).dropna().map(lambda x: f'specI_v3_Cluster{int(x)}')
-    pd.DataFrame({'origin': origin}).to_csv('preproc/AMP_origin.tsv.gz', index_label='AMP', sep='\t')
+
+    origin = pd.read_table('./data/amp_based_tax_mo.tsv', index_col=0)
+    def valid_specI(x):
+        return len([t for t in x.split(', ') if t != 'unknown']) == 1
+    def fix_specI(x):
+        ts = [t for t in x.split(', ') if t != 'unknown']
+        if len(ts) > 1:
+            return None
+        return ts[0]
+    origin = origin.loc[origin.specI.map(valid_specI)]
+    origin['specI'] = origin.specI.map(fix_specI)
+    pd.DataFrame({'origin': origin['specI']}).to_csv('preproc/AMP_origin.tsv.gz', index_label='AMP', sep='\t')
 
     interesting = set(origin.index)
 
