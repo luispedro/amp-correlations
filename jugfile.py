@@ -1,8 +1,9 @@
 from jug import TaskGenerator, iteratetask
-from preproc import filter_columns, filter_human_gut
+from preproc import filter_columns, filter_human_gut, filter_number_samples
 
 filter_columns = TaskGenerator(filter_columns)
 filter_human_gut = TaskGenerator(filter_human_gut)
+filter_number_samples = TaskGenerator(filter_number_samples)
 
 @TaskGenerator
 def run_corrs(amp_name, motus_name, mode):
@@ -69,6 +70,32 @@ def summarize_correlations(p):
     return predictions
 
 @TaskGenerator
+def count_occurrences():
+    import pandas as pd
+    def norm_microontology(row):
+        row = row.dropna().to_dict()
+        mo = row['microontology']
+        if 'host_tax_id' in row:
+            mo = f"{mo}:taxid_{int(row['host_tax_id'])}"
+        return mo
+    meta = pd.read_table('data/metadata.tsv', index_col=0)
+    habitat = pd.Series({ix:norm_microontology(meta.loc[ix]) for ix in meta.index})
+
+    data = []
+    ph_data = []
+    for ch in pd.read_table('data/abundances/amp_abundances_matrix.tsv.gz', index_col=0, chunksize=200):
+        ch.fillna(0., inplace=True)
+        data.append((ch>0).sum(1))
+        ph_data.append((ch>0).T.groupby(habitat).sum().T)
+    data = pd.concat(data)
+    ph_data = pd.concat(ph_data)
+    oname = 'preproc/occ-counts.tsv'
+    ph_oname = 'preproc/occ-ph-counts.tsv'
+    data.to_csv(oname, sep='\t')
+    ph_data.to_csv(ph_oname, sep='\t')
+    return oname
+
+@TaskGenerator
 def results_q(s):
     return {
             'nr': len(s),
@@ -84,10 +111,19 @@ def save_to_tsv(df, oname):
 
 amp_name, motus_name = iteratetask(filter_columns(), 2)
 
+count_occurrences()
+
 final = {}
 tables = {}
 for min_samples in [10, 20, 30, 45, 60, 100, 120, 150, 200, 250, 500]:
     hg_amp_name, hg_motus_name = iteratetask(filter_human_gut(amp_name, motus_name, min_number_samples=min_samples), 2)
+    all_amp_name, all_motus_name = iteratetask(filter_number_samples(amp_name, motus_name, min_number_samples=min_samples), 2)
+
+    p = run_corrs(all_amp_name, all_motus_name, 'spearmanr')
+    s0 = summarize_correlations(p)
+    save_to_tsv(s0, f'outputs/spearmanr-results_min={min_samples}.tsv.xz')
+    tables[min_samples, 'all-spearmanr'] = s0
+    final[min_samples, 'all-spearmanr'] = results_q(s0)
 
     p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr')
     s0 = summarize_correlations(p)
