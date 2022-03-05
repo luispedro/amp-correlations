@@ -22,6 +22,10 @@ def run_corrs(amp_name, motus_name, mode):
         return pd.DataFrame(corr.pearsonr_pcorr(data.values, mv), index=data.index, columns=motus.columns)
     elif mode == 'spearmanr':
         return pd.DataFrame(corr.spearman_pcorr(data.values, mv), index=data.index, columns=motus.columns)
+    elif mode == 'spearmanr-nz':
+        return pd.DataFrame(corr.spearman_nz_pcorr(data.values, mv), index=data.index, columns=motus.columns)
+    elif mode == 'spearmanr-nzz':
+        return pd.DataFrame(corr.spearman_nzz_pcorr(data.values, mv), index=data.index, columns=motus.columns)
     else:
         raise ValueError("?")
 
