@@ -53,13 +53,19 @@ def summarize_correlations(p):
     origins = pd.read_table('preproc/AMP_origin.tsv.gz', index_col=0)
     taxo = pd.read_table('./data/db_mOTU_taxonomy_ref-mOTUs.tsv', index_col=0)
     taxo.rename(index=lambda ix: int(ix.split('_')[-1], 10), inplace=True)
+
+    taxo_meta = pd.read_table('./data/db_mOTU_taxonomy_meta-mOTUs.tsv', index_col=0)
+    taxo_meta.rename(index=lambda ix: int(ix.split('_')[-1], 10), inplace=True)
+
+    taxo = pd.concat((taxo,taxo_meta))
+
     origin_id = origins.squeeze().map(lambda c : int(c[len('specI_v3_Cluster'):], 10))
 
     predictions = {}
     for k,v in p.iterrows():
         predictions[k] = {
                 'prediction': v.idxmax(),
-                'prediction_id': int(v.idxmax().split('_')[-1][:-1], 10),
+                'prediction_id': -1 if v.idxmax() == '-1' else int(v.idxmax().split('_')[-1][:-1], 10),
                 'r': v.max(),
                 }
 
