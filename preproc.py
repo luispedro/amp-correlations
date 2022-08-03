@@ -33,7 +33,7 @@ def filter_columns():
 
     motus = pd.read_table('data/freeze.v2.motusv2_5.mg3.insertcount.tsv.gz', index_col=0)
     motus = motus[motus.any(1)]
-    motus = (motus.T/motus.sum(1)).T
+    motus = motus.divide(motus.sum(1),axis=0)
 
     samples = set(data.columns) &  set(motus.index)
 
