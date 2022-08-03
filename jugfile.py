@@ -135,17 +135,41 @@ for min_samples in [10, 20, 30, 45, 60, 100, 120, 150, 200, 250, 500]:
     tables[min_samples, 'all-spearmanr'] = s0
     final[min_samples, 'all-spearmanr'] = results_q(s0)
 
+    p = run_corrs(all_amp_name, all_motus_name, 'spearmanr-nzz')
+    s0 = summarize_correlations(p)
+    save_to_tsv(s0, f'outputs/spearmanr-nz-results_min={min_samples}.tsv.xz')
+    tables[min_samples, 'all-spearmanr-nzz'] = s0
+    final[min_samples, 'all-spearmanr-nzz'] = results_q(s0)
+
+    p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr-nzz')
+    s0 = summarize_correlations(p)
+    save_to_tsv(s0, f'outputs/spearmanr-nz-hg-results_min={min_samples}.tsv.xz')
+    tables[min_samples, 'hg-only-spearmanr-nzz'] = s0
+    final[min_samples, 'hg-only-spearmanr-nzz'] = results_q(s0)
+
+    p_nz = run_corrs(all_amp_name, all_motus_name, 'spearmanr-nz')
+    s0 = summarize_correlations(p_nz)
+    save_to_tsv(s0, f'outputs/spearmanr-nz-results_min={min_samples}.tsv.xz')
+    tables[min_samples, 'all-spearmanr-nz'] = s0
+    final[min_samples, 'all-spearmanr-nz'] = results_q(s0)
+
+    p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr-nz')
+    s0 = summarize_correlations(p)
+    save_to_tsv(s0, f'outputs/spearmanr-nz-hg-results_min={min_samples}.tsv.xz')
+    tables[min_samples, 'hg-only-spearmanr-nz'] = s0
+    final[min_samples, 'hg-only-spearmanr-nz'] = results_q(s0)
+
     p = run_corrs(hg_amp_name, hg_motus_name, 'spearmanr')
     s0 = summarize_correlations(p)
     save_to_tsv(s0, f'outputs/spearmanr-hg-results_min={min_samples}.tsv.xz')
-    tables[min_samples, 'spearmanr'] = s0
-    final[min_samples, 'spearmanr'] = results_q(s0)
+    tables[min_samples, 'hg-only-spearmanr'] = s0
+    final[min_samples, 'hg-only-spearmanr'] = results_q(s0)
 
     p = run_corrs(hg_amp_name, hg_motus_name, 'pearsonr')
     s1 = summarize_correlations(p)
     save_to_tsv(s1, f'outputs/pearsonr-hg-results_min={min_samples}.tsv.xz')
-    tables[min_samples, 'pearsonr'] = s1
-    final[min_samples, 'pearsonr'] = results_q(s1)
+    tables[min_samples, 'hg-only-pearsonr'] = s1
+    final[min_samples, 'hg-only-pearsonr'] = results_q(s1)
 
     p = compute_jaccard(hg_amp_name, hg_motus_name)
-    final[min_samples, 'jaccard'] = results_q(summarize_correlations(p))
+    final[min_samples, 'hg-only-jaccard'] = results_q(summarize_correlations(p))
